@@ -32,17 +32,23 @@ test('cart_validation', async ({ page }) => {
 
   await page.locator('//div[@role="listitem"][1]//h2').dblclick();
 
-  await page.getByLabel('Quantity:').selectOption('1');
+  //Didn't use the Select as selector cause Amazon doesn't recognize it properly - I tried mimic real user actions
+  await page.locator('//select[@name="quantity"]').focus();
+  await page.keyboard.press('ArrowDown');
+  await page.keyboard.press('ArrowDown');
+  await page.keyboard.press('ArrowDown'); 
+  await page.keyboard.press('Enter'); 
+  await page.waitForTimeout(1000);
 
   const expectedName = await page.locator('//h1[@id="title"]').innerText();
-  const expectedQuantity = 1;
+  const expectedQuantity = 3;
   const price = await page.locator('//div[@id="corePrice_feature_div"]//span[@class="a-offscreen"]').innerText();
   const expectedPrice = parseFloat(price.replace('$', '')) * expectedQuantity
 
   const navigationPromise = page.waitForNavigation();
   await page.locator('//input[@id="add-to-cart-button"]').click();  
   await navigationPromise;
-
+  
   await expect(page.locator('//h1[contains(text(), "Added to cart")]')).toBeVisible();
   const navigationPromise2 = page.waitForNavigation();
   await page.locator('//div[@id="sw-atc-buy-box"]//a[contains(text(), "Go to Cart")]').click();
