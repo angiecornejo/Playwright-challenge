@@ -27,5 +27,37 @@ test('stock_validation', async ({ page }) => {
 });
 
 test('cart_validation', async ({ page }) => {
+  await page.locator('input[id="twotabsearchtextbox"]').fill('mirror');
+  await page.keyboard.press('Enter');
+
+  await page.locator('//div[@role="listitem"][1]//h2').dblclick();
+
+  await page.getByLabel('Quantity:').selectOption('1');
+
+  const expectedName = await page.locator('//h1[@id="title"]').innerText();
+  const expectedQuantity = 1;
+  const price = await page.locator('//div[@id="corePrice_feature_div"]//span[@class="a-offscreen"]').innerText();
+  const expectedPrice = parseFloat(price.replace('$', '')) * expectedQuantity
+
+  const navigationPromise = page.waitForNavigation();
+  await page.locator('//input[@id="add-to-cart-button"]').click();  
+  await navigationPromise;
+
+  await expect(page.locator('//h1[contains(text(), "Added to cart")]')).toBeVisible();
+  const navigationPromise2 = page.waitForNavigation();
+  await page.locator('//div[@id="sw-atc-buy-box"]//a[contains(text(), "Go to Cart")]').click();
+  await navigationPromise2;
   
+  const actualName = await page.locator('//span[@class="a-size-base-plus a-color-base sc-product-title sc-grid-item-product-title"]//span[@class="a-truncate-full a-offscreen"]').innerText();
+  const actualPrice = parseFloat(
+    (await page.locator
+      ('//div[@class="a-row a-spacing-mini sc-subtotal sc-subtotal-activecart sc-java-remote-feature"]//span[@class="a-size-medium a-color-base sc-price sc-white-space-nowrap"]')
+      .innerText())
+      .replace('$', ''));
+  const actualQuantity = await page.locator('//div[@class="a-declarative"]//div[@class="a-declarative"]').innerText();
+
+  expect(actualName).toEqual(expectedName)
+  expect(parseInt(actualQuantity)).toEqual(expectedQuantity)
+  expect(actualPrice).toEqual(expectedPrice)  
+
 });
